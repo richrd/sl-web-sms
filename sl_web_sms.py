@@ -11,23 +11,6 @@ __version__     = "0.1"
 import urllib,httplib,string
 
 
-# Get an escaped version of a single character.
-def get_char_encoded(c):
-    return hex(ord(c)).replace("0x","%").upper()
-
-# Custom escaping, escapes all except 'safe' characters.
-def escape(s, safe = '/'):
-    # FIXME: some special characters are incorectly escaped.
-    always_safe = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-'
-    safe = always_safe + safe
-    result = ""
-    for ch in s:
-        if ch not in safe:
-            result = result + get_char_encoded(ch)
-        else:
-            result = result + ch
-    return result
-
 # Get a substring of a string based on two string delimi0ters
 def get_string_between(start,stop,s):
     i1 = s.find(start)
@@ -48,10 +31,17 @@ class SaunalahtiWebSMS:
         self.login_username_field = 'username'
         self.login_password_field = 'password'
         
-        self.default_headers = {"Content-type": "application/x-www-form-urlencoded",
-                                       "Accept": "text/plain",
-                                       "User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:16.0) Gecko/20100101 Firefox/16.0",
-                                        }
+        # self.default_headers = {"Content-type": "application/x-www-form-urlencoded",
+        #                                "Accept": "text/plain",
+        #                                "User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:16.0) Gecko/20100101 Firefox/16.0",
+        #                                 }
+
+        self.default_headers = {
+            "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            # Content-Length:184
+            "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
+            "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36",
+        }
 
         self.sms_sender_field = 'sender'
         self.sms_recipients_field = 'recipients'
@@ -100,6 +90,15 @@ class SaunalahtiWebSMS:
                 num = get_string_between("value=\"","\"",line)
                 numbers.append(num)
         return numbers
+
+    def _get_shortest_sender(self):
+        shortest = self.sender_numbers[0]
+        for num in self.sender_numbers:
+            if len(num)<len(shortest):
+                shortest = num
+        print "Sending from",shortest
+        return shortest
+
 
     #
     # Return list of format [msgs sent, free msgs left, paid msgs left]. All values are int.
@@ -154,10 +153,10 @@ class SaunalahtiWebSMS:
                     self.sms_recipients_field: recipients,
                     self.sms_length_field: str(len(message)),
                     self.sms_submit_field: u"Laheta",
+                    self.sms_message_field: message,
         }
         params = urllib.urlencode(params)
-        params = params + "&"+self.sms_message_field+"=" + escape(message)
-
+        
         headers=self.default_headers
         headers["Cookie"] = self.AUTH_COOKIE
 
@@ -179,33 +178,14 @@ class SaunalahtiWebSMS:
             return True
         return False
 
-    def Send(self,sender,recipients,message):
+    def Send(self,recipients,message,sender=None):
+        if sender==None:
+            sender = self._get_shortest_sender()
         response = self._send_sms(sender,recipients,message)
-        raw_data = response.read().decode("ISO-8859-1")
+        raw_data = response.read()
+        raw_data = raw_data.decode("ISO-8859-1")
+
         success_str=u"Viesti lähetetty."
         if(raw_data.find(success_str) != -1):
             return True
         return False
-
-# Test sending a message.
-def Test():
-    service = SaunalahtiWebSMS()
-    if not service.Login("user","pass"):
-        print "Login failed, check username and password."
-        print "You will need a Saunalahti customer account."
-        return False
-
-    print "Status [sent,free,paid]: ",service._get_current_status()
-    print "Available 'from' numbers: ",service._get_sender_numbers()
-
-    # From-number must be one of the numbers in list returned by _get_sender_numbers()
-    if not service.Send("from","to","message"):
-        print "Failed to send message! Check for invalid from/to value, or too long message."
-        return False
-    print "Message sent!"
-    return True
-
-
-    
-if __name__ == "__main__":
-    Test()

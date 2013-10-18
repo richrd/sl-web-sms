@@ -26,14 +26,13 @@ def QueryPassword():
 
 
 def RunTest():
-    # try:
-    #     credentials = raw_input("Username: "),QueryPassword()
-    # except:
-    #     print ""
-    #     print "Login canceled."
-    #     return False
+    try:
+        credentials = raw_input("Username: "),QueryPassword()
+    except:
+        print ""
+        print "Login canceled."
+        return False
 
-    credentials=("0445310791","a8uahiry")
 
     service = sl_web_sms.SaunalahtiWebSMS()
     if not service.Login(credentials[0],credentials[1]):
@@ -41,8 +40,7 @@ def RunTest():
         return False
 
     print "Logged in!"
-    testmsg = "Hello world! äö!\"#¤%&/()=?+´^Å*-_.,:;|<>@£$‰{[]}\\"
-    # testmsg = "Hello world!"
+    testmsg = "Hello world!"
     if not service.Send(credentials[0],testmsg):
         print "Failed to send message!";
         return False

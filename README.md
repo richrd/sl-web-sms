@@ -12,6 +12,8 @@ Simple Python lib for sending free SMS-messages via oma.saunalahti.fi web interf
     try:
         service.Login(user,pw)
 
+        message = u"Hello world!" # message data must be unicode
+
         # Automatically select which number to send from
         service.Send(to,message)
 

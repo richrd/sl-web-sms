@@ -11,7 +11,7 @@ __version__     = "0.1"
 import urllib,httplib,string
 
 
-# Get a substring of a string based on two string delimi0ters
+# Get a substring of a string based on two string delimiters
 def get_string_between(start,stop,s):
     i1 = s.find(start)
     if i1 == -1: return False

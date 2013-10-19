@@ -96,7 +96,6 @@ class SaunalahtiWebSMS:
         for num in self.sender_numbers:
             if len(num)<len(shortest):
                 shortest = num
-        print "Sending from",shortest
         return shortest
 
 
@@ -189,3 +188,5 @@ class SaunalahtiWebSMS:
         if(raw_data.find(success_str) != -1):
             return True
         return False
+
+

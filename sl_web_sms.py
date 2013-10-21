@@ -25,20 +25,15 @@ def get_string_between(start,stop,s):
 # Main class
 class SaunalahtiWebSMS:
     def __init__(self):
-        self.host = 'oma.saunalahti.fi'
+        self.host = "oma.saunalahti.fi"
+        self.site_encoding = "ISO-8859-1"
         
         # Parameters used to pass the login data.
         self.login_username_field = 'username'
         self.login_password_field = 'password'
-        
-        # self.default_headers = {"Content-type": "application/x-www-form-urlencoded",
-        #                                "Accept": "text/plain",
-        #                                "User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:16.0) Gecko/20100101 Firefox/16.0",
-        #                                 }
 
         self.default_headers = {
             "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            # Content-Length:184
             "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
             "User-Agent":"Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36",
         }
@@ -107,7 +102,9 @@ class SaunalahtiWebSMS:
             params = None
 
             headers=self.default_headers
-            headers["Cookie"] = self.AUTH_COOKIE
+            
+            # pass the cookie along with the http request
+            headers["Cookie"] = self._get_auth_cookie
 
             conn = httplib.HTTPSConnection(self.host)
             conn.request("POST", "/settings/smsSend", params, headers)
@@ -181,8 +178,8 @@ class SaunalahtiWebSMS:
         if sender==None:
             sender = self._get_shortest_sender()
         response = self._send_sms(sender,recipients,message)
-        raw_data = response.read()
-        raw_data = raw_data.decode("ISO-8859-1")
+        raw_data = response.read().decode(self.site_encoding)
+
 
         success_str=u"Viesti lähetetty."
         if(raw_data.find(success_str) != -1):
